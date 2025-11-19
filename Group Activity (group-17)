@@ -126,3 +126,72 @@ class FinancialApp(tk.Tk):
 if __name__ == "__main__":
     app = FinancialApp()
     app.mainloop()
+
+
+# database.py
+import sqlite3
+from expense_model import Expense
+
+class DatabaseManager:
+    """
+    Handles all interactions with the SQLite database for local data storage. [cite: 31]
+    Ensures proper connection management and auto-commit. 
+    """
+    def __init__(self, db_name="financial_data.db"):
+        self.db_name = db_name
+        self.conn = None
+        self.cursor = None
+        self._connect()
+        self._create_table()
+
+    def _connect(self):
+        """Establishes a connection to the SQLite database."""
+        try:
+            self.conn = sqlite3.connect(self.db_name)
+            self.cursor = self.conn.cursor()
+        except sqlite3.Error as e:
+            print(f"Database connection error: {e}")
+
+    def _create_table(self):
+        """Creates the expenses table if it doesn't exist."""
+        self.cursor.execute("""
+            CREATE TABLE IF NOT EXISTS expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                amount REAL NOT NULL,
+                category TEXT NOT NULL,
+                description TEXT,
+                date TEXT NOT NULL
+            )
+        """)
+        self.conn.commit() # Auto-commit function implemented 
+
+    def add_expense(self, expense: Expense):
+        """Inserts a new expense into the database."""
+        sql = "INSERT INTO expenses (amount, category, description, date) VALUES (?, ?, ?, ?)"
+        self.cursor.execute(sql, expense.to_tuple())
+        self.conn.commit() # Auto-commit 
+
+    def get_all_expenses(self):
+        """Retrieves all expenses from the database."""
+        self.cursor.execute("SELECT amount, category, description, date FROM expenses ORDER BY date DESC")
+        return self.cursor.fetchall()
+
+    def get_spending_summary(self):
+        """Calculates total spending grouped by category (for Report Module). [cite: 36]"""
+        self.cursor.execute("""
+            SELECT category, SUM(amount) 
+            FROM expenses 
+            GROUP BY category 
+            ORDER BY SUM(amount) DESC
+        """)
+        return self.cursor.fetchall()
+
+    def close(self):
+        """Closes the database connection."""
+        if self.conn:
+            self.conn.close()
+
+# Example Custom Category Feature - Can be stored in a separate table/file
+STANDARD_CATEGORIES = [
+    "Food & Groceries", "Transport", "Entertainment", "Utilities", "Custom"
+]
