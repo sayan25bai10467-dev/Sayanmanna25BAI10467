@@ -7,6 +7,7 @@
   i) Recording every expense.
   ii) Organizing expenses by category (e.g., food, transportation, entertainment).
   iii) Providing a single view that shows exactly how much is being spent in each category.
+  
 # Technologies & Architecture :- 
 * Programming Stack : The application is built using a robust and familiar stack -
 *Component    *Technology    *Role
@@ -46,4 +47,11 @@
   * Mobile Integration: Expand to a mobile platform with a smartphone app so users can log expenses on-the-go.
   * Cloud Sync: Enable backup and synchronization across multiple devices for seamless tracking anywhere.
   * Smart Recommendations: Add AI-powered suggestions to help users optimize spending and reach their budget goals.
+
+# Team Members:-
+  * Janamjay Gupta (Reg. No. 25BAI11262)
+  * Sayan Manna (Reg. No. 25BAI10467)
+  * Ganesh S (Reg. No. 25MEI10020)
+  * Vidit Agarwal (Reg. No. 25BCY10049)
+  * Rochan R K (Reg. No. 25BCE11177)
     
