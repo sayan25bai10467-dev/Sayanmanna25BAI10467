@@ -1,1 +1,128 @@
+# main.py
+import tkinter as tk
+from tkinter import messagebox
+from database import DatabaseManager, STANDARD_CATEGORIES
+from expense_model import Expense
 
+class FinancialApp(tk.Tk):
+    """
+    The main application window (Desktop App). 
+    Uses Python with Object-Oriented Design. [cite: 30]
+    """
+    def __init__(self):
+        super().__init__()
+        self.title("Financial Expense Manager")
+        self.geometry("800x600")
+        
+        # Initialize Database Manager
+        self.db_manager = DatabaseManager()
+
+        self._setup_ui()
+        self.update_summary_display() # Updates summary display upon startup [cite: 39]
+        
+        # Bind closing event to properly close the database connection
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def _setup_ui(self):
+        """Sets up the UI Module with a user-friendly dashboard. """
+        # --- Add Expense Form (Input Module)  ---
+        input_frame = tk.Frame(self, padx=10, pady=10)
+        input_frame.pack(fill='x')
+        
+        # Amount Input
+        tk.Label(input_frame, text="Amount:").grid(row=0, column=0, padx=5, pady=5)
+        self.amount_entry = tk.Entry(input_frame)
+        self.amount_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        # Category Selection (Includes Custom Category feature) 
+        tk.Label(input_frame, text="Category:").grid(row=0, column=2, padx=5, pady=5)
+        self.category_var = tk.StringVar(self)
+        self.category_var.set(STANDARD_CATEGORIES[0]) # default value
+        self.category_menu = tk.OptionMenu(input_frame, self.category_var, *STANDARD_CATEGORIES)
+        self.category_menu.grid(row=0, column=3, padx=5, pady=5)
+
+        # Description Input
+        tk.Label(input_frame, text="Description:").grid(row=1, column=0, padx=5, pady=5)
+        self.desc_entry = tk.Entry(input_frame)
+        self.desc_entry.grid(row=1, column=1, columnspan=2, fill='x', padx=5, pady=5)
+
+        # Submit Button
+        tk.Button(input_frame, text="Add Expense", command=self.add_expense_handler).grid(row=1, column=3, padx=5, pady=5)
+
+        # --- Report/Summary Module (Data Analysis and Visualization) [cite: 36] ---
+        tk.Label(self, text="Expense Summary (Top Categories)", font=('Arial', 14, 'bold')).pack(pady=10)
+        self.summary_text = tk.Text(self, height=10, state='disabled', wrap='word')
+        self.summary_text.pack(fill='x', padx=10)
+
+        tk.Label(self, text="Detailed Expenses (Next Step: Visual Charts)", font=('Arial', 14, 'bold')).pack(pady=10)
+        self.details_listbox = tk.Listbox(self, height=15)
+        self.details_listbox.pack(fill='both', expand=True, padx=10, pady=10)
+        
+    def add_expense_handler(self):
+        """
+        Handles the expense entry process:
+        User enters expense → App validates data → Assigns category → Stores in database. [cite: 39]
+        """
+        try:
+            amount = float(self.amount_entry.get())
+            category = self.category_var.get()
+            description = self.desc_entry.get()
+
+            # Validation Check and Error Handling [cite: 27, 81]
+            if amount <= 0:
+                messagebox.showerror("Invalid Input", "Amount must be a positive number.")
+                return
+
+            # Assigns category and stores in database [cite: 39]
+            new_expense = Expense(amount, category, description)
+            self.db_manager.add_expense(new_expense)
+            
+            messagebox.showinfo("Success", "Expense recorded successfully!")
+            self.clear_inputs()
+            self.update_summary_display() # Updates summary display [cite: 39]
+
+        except ValueError:
+            # User-friendly error message for invalid input [cite: 27, 81]
+            messagebox.showerror("Invalid Input", "Please enter a valid number for the amount.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An unexpected error occurred: {e}")
+
+    def clear_inputs(self):
+        """Resets the input fields after a successful submission."""
+        self.amount_entry.delete(0, tk.END)
+        self.desc_entry.delete(0, tk.END)
+        self.category_var.set(STANDARD_CATEGORIES[0])
+
+    def update_summary_display(self):
+        """
+        Retrieves data and updates the UI with the summary and detailed view.
+        """
+        # 1. Update Category Summary (Report Module)
+        summary_data = self.db_manager.get_spending_summary()
+        self.summary_text.config(state='normal')
+        self.summary_text.delete('1.0', tk.END)
+        
+        total_spent = sum(item[1] for item in summary_data)
+        self.summary_text.insert(tk.END, f"TOTAL SPENT THIS MONTH: ₹{total_spent:,.2f}\n\n")
+
+        for category, amount in summary_data:
+            percentage = (amount / total_spent) * 100 if total_spent else 0
+            self.summary_text.insert(tk.END, f"- {category}: ₹{amount:,.2f} ({percentage:.1f}% of total)\n")
+            
+        self.summary_text.config(state='disabled')
+        
+        # 2. Update Detailed Listbox (Live display of all recorded expenses) [cite: 52]
+        self.details_listbox.delete(0, tk.END)
+        all_expenses = self.db_manager.get_all_expenses()
+        for amount, category, desc, date in all_expenses:
+            display_str = f"[{date}] ₹{amount:,.2f} | Category: {category} | Description: {desc}"
+            self.details_listbox.insert(tk.END, display_str)
+
+    def on_closing(self):
+        """Properly closes the database connection before exiting."""
+        self.db_manager.close()
+        self.destroy()
+
+if __name__ == "__main__":
+    app = FinancialApp()
+    app.mainloop()
