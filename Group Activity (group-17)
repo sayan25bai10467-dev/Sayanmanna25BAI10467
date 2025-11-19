@@ -225,3 +225,108 @@ class Expense:
         """Helper method to get the current date in YYYY-MM-DD format."""
         from datetime import datetime
         return datetime.now().strftime("%Y-%m-%d")
+
+# gui_widgets.py
+import tkinter as tk
+from tkinter import ttk
+from database import STANDARD_CATEGORIES
+
+class ExpenseForm(tk.Frame):
+    """
+    Input Module: Form-based expense entry.
+    """
+    def __init__(self, master, submit_command):
+        super().__init__(master, padx=10, pady=10)
+        self.submit_command = submit_command
+        self._setup_widgets()
+
+    def _setup_widgets(self):
+        # Configure grid weights for responsive layout
+        self.columnconfigure(1, weight=1)
+
+        # 1. Amount Input
+        tk.Label(self, text="Amount (₹):").grid(row=0, column=0, padx=5, pady=5, sticky='w')
+        self.amount_entry = tk.Entry(self)
+        self.amount_entry.grid(row=0, column=1, padx=5, pady=5, sticky='ew')
+
+        # 2. Category Selection (with custom feature hook)
+        tk.Label(self, text="Category:").grid(row=0, column=2, padx=5, pady=5, sticky='w')
+        self.category_var = tk.StringVar(self)
+        self.category_var.set(STANDARD_CATEGORIES[0]) # default value
+        self.category_menu = tk.OptionMenu(self, self.category_var, *STANDARD_CATEGORIES)
+        self.category_menu.grid(row=0, column=3, padx=5, pady=5, sticky='ew')
+
+        # 3. Description Input
+        tk.Label(self, text="Description:").grid(row=1, column=0, padx=5, pady=5, sticky='w')
+        self.desc_entry = tk.Entry(self)
+        self.desc_entry.grid(row=1, column=1, columnspan=2, padx=5, pady=5, sticky='ew')
+
+        # 4. Submit Button
+        tk.Button(self, text="Add Expense", command=self.submit_command, bg="#32CD32", fg="white").grid(row=1, column=3, padx=5, pady=5, sticky='ew')
+
+    def get_input_data(self):
+        """Retrieves data from the input fields."""
+        return {
+            'amount': self.amount_entry.get(),
+            'category': self.category_var.get(),
+            'description': self.desc_entry.get()
+        }
+
+    def clear_inputs(self):
+        """Resets the input fields after a successful submission."""
+        self.amount_entry.delete(0, tk.END)
+        self.desc_entry.delete(0, tk.END)
+        self.category_var.set(STANDARD_CATEGORIES[0])
+
+
+class DashboardView(tk.Frame):
+    """
+    UI Module: User-friendly dashboard and Summary Reports.
+    """
+    def __init__(self, master):
+        super().__init__(master, padx=10, pady=10)
+        self._setup_widgets()
+
+    def _setup_widgets(self):
+        # 1. Summary Report Area (Category-wise spending breakdown)
+        tk.Label(self, text="Expense Summary (Top Categories)", font=('Arial', 14, 'bold')).pack(fill='x', pady=(0, 5))
+        self.summary_text = tk.Text(self, height=10, state='disabled', wrap='word', bg='#f5f5f5')
+        self.summary_text.pack(fill='x', pady=(0, 10))
+
+        # 2. Detailed Expense List (Live display of all recorded expenses)
+        tk.Label(self, text="Detailed Expenses", font=('Arial', 14, 'bold')).pack(fill='x', pady=(10, 5))
+        
+        # Use a Frame for Listbox and Scrollbar
+        list_frame = tk.Frame(self)
+        list_frame.pack(fill='both', expand=True)
+
+        scrollbar = tk.Scrollbar(list_frame, orient=tk.VERTICAL)
+        self.details_listbox = tk.Listbox(list_frame, height=15, yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.details_listbox.yview)
+
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.details_listbox.pack(side=tk.LEFT, fill='both', expand=True)
+
+    def update_summary(self, summary_data):
+        """Updates the category summary text box."""
+        self.summary_text.config(state='normal')
+        self.summary_text.delete('1.0', tk.END)
+        
+        total_spent = sum(item[1] for item in summary_data)
+        self.summary_text.insert(tk.END, f"TOTAL SPENT THIS MONTH: ₹{total_spent:,.2f}\n\n")
+
+        if total_spent > 0:
+            for category, amount in summary_data:
+                percentage = (amount / total_spent) * 100
+                self.summary_text.insert(tk.END, f"- {category}: ₹{amount:,.2f} ({percentage:.1f}% of total)\n")
+        else:
+            self.summary_text.insert(tk.END, "No expenses recorded yet.")
+            
+        self.summary_text.config(state='disabled')
+    
+    def update_details(self, all_expenses):
+        """Updates the detailed listbox."""
+        self.details_listbox.delete(0, tk.END)
+        for amount, category, desc, date in all_expenses:
+            display_str = f"[{date}] ₹{amount:,.2f} | Category: {category} | Description: {desc if desc else 'N/A'}"
+            self.details_listbox.insert(tk.END, display_str)
