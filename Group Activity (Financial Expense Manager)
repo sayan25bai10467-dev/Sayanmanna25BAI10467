@@ -2,66 +2,45 @@ import datetime
 import json
 import os
 
-# --- Configuration and Data Storage ---
-
-# Define the file path for persistent storage
 EXPENSE_FILE = "expenses.json"
 
-# Global list to store expense records
-# Each record is a dictionary: {'amount': float, 'category': str, 'description': str, 'date': str}
 expenses = []
 
-# --- File Handling Functions ---
-
 def load_expenses():
-    """Loads expenses from the JSON file if it exists."""
     global expenses
     if os.path.exists(EXPENSE_FILE):
         try:
             with open(EXPENSE_FILE, 'r') as f:
-                # Ensure the loaded object is a list, or initialize to empty list
                 data = json.load(f)
                 if isinstance(data, list):
                     expenses = data
                 else:
-                    raise json.JSONDecodeError("File content is not a list.", doc=str(data), pos=0)
-            print(f"Loaded {len(expenses)} existing records.")
-        except (IOError, json.JSONDecodeError) as e:
-            print(f"Error loading expense file ({e}). Starting fresh.")
+                    raise ValueError("File content is invalid.")
+            print(f"Loaded {len(expenses)} records.")
+        except Exception as e:
+            print(f"Error loading file. Starting fresh.")
             expenses = []
     else:
-        print("Expense file not found. Starting with an empty ledger.")
+        print("Starting with an empty ledger.")
 
 def save_expenses():
-    """Saves the current list of expenses to the JSON file."""
     try:
         with open(EXPENSE_FILE, 'w') as f:
             json.dump(expenses, f, indent=4)
-        print("Data saved successfully.")
+        print("Data saved.")
     except IOError:
-        print("Error: Could not save data to file.")
-
-# --- Helper Function for Display ---
+        print("Error: Could not save data.")
 
 def get_formatted_expense_table(with_index=False):
-    """
-    Generates a formatted string table of expenses.
-    If with_index is True, includes an index column for selection (e.g., deletion).
-    """
     if not expenses:
         return "\nNo expenses recorded yet."
 
-    # Find the maximum width for description and category
     max_desc = max(len(e['description']) for e in expenses) if expenses else 15
     max_cat = max(len(e['category']) for e in expenses) if expenses else 8
     
-    # Define column widths
     w_index = 5 if with_index else 0
     w_date, w_amt, w_cat, w_desc = 10, 10, max(max_cat, 8), max(max_desc, 15)
     
-    separator_width = w_date + w_amt + w_cat + w_desc + (9 if not with_index else 13) # Adjust based on number of columns/separators
-
-    # Print Header
     header_parts = []
     if with_index:
         header_parts.append(f"{'#':<{w_index}} | ")
@@ -70,9 +49,8 @@ def get_formatted_expense_table(with_index=False):
     header_parts.append(f"{'CATEGORY':<{w_cat}} | ")
     header_parts.append(f"{'DESCRIPTION':<{w_desc}}")
     
-    output = ["\n--- Recorded Expenses ---", "".join(header_parts), "-" * separator_width]
+    output = ["\n--- Expenses ---", "".join(header_parts)]
 
-    # Print Expense Rows
     for i, expense in enumerate(expenses):
         row_parts = []
         if with_index:
@@ -82,134 +60,108 @@ def get_formatted_expense_table(with_index=False):
         row_parts.append(f"{expense['category']:<{w_cat}} | ")
         row_parts.append(f"{expense['description']:<{w_desc}}")
         output.append("".join(row_parts))
-        
+            
     return "\n".join(output)
 
-# --- Core Application Logic ---
-
 def add_expense():
-    """Prompts the user for expense details and adds it to the list."""
-    print("\n--- Add New Expense ---")
+    print("\n--- Add Expense ---")
     
-    # Get Amount
     while True:
         try:
-            amount = float(input("Enter amount spent (e.g., 55.50): $"))
+            amount = float(input("Enter amount spent: $"))
             if amount <= 0:
                 print("Amount must be positive.")
                 continue
             break
         except ValueError:
-            print("Invalid input. Please enter a number.")
+            print("Invalid input. Enter a number.")
 
-    # Get Category
-    category = input("Enter category (e.g., Food, Travel, Utilities): ").strip()
-    if not category:
-        category = "Other"
-
-    # Get Description
-    description = input("Enter a brief description: ").strip()
-    if not description:
-        description = "No description provided"
-
-    # Record Date (automatically set to today)
+    category = input("Enter category (e.g., Food, Travel): ").strip() or "Other"
+    description = input("Enter description: ").strip() or "No description"
     date_str = datetime.date.today().isoformat()
 
-    # Create the expense dictionary
     new_expense = {
         'amount': amount,
         'category': category.title(),
         'description': description,
         'date': date_str
     }
-    
+        
     expenses.append(new_expense)
-    print(f"\n[SUCCESS] Added expense: ${amount:.2f} in {category.title()}.")
-    save_expenses() # Save after every addition
+    print(f"\nAdded: ${amount:.2f} in {category.title()}.")
+    save_expenses()
 
 def view_expenses():
-    """Displays all recorded expenses in a formatted table."""
     print(get_formatted_expense_table(with_index=False))
 
 def delete_expense():
-    """Allows the user to select and delete an expense by index."""
     if not expenses:
         print("\nNo expenses to delete.")
         return
 
     print("\n--- Delete Expense ---")
-    # Show expenses with indices
     print(get_formatted_expense_table(with_index=True))
 
     while True:
         try:
-            # User input is 1-based index
-            index_to_delete = int(input("\nEnter the number (#) of the expense to delete, or 0 to cancel: "))
+            index_to_delete = int(input("\nEnter # to delete, or 0 to cancel: "))
             
             if index_to_delete == 0:
-                print("Deletion cancelled.")
+                print("Cancelled.")
                 return
             
-            # Convert 1-based index to 0-based list index
             list_index = index_to_delete - 1
             
             if 0 <= list_index < len(expenses):
-                # Confirm deletion
                 deleted_item = expenses[list_index]
-                print(f"\nConfirm deletion of: ${deleted_item['amount']:.2f} ({deleted_item['category']})?")
+                print(f"\nDelete: ${deleted_item['amount']:.2f} ({deleted_item['category']})?")
                 confirmation = input("Type 'YES' to confirm: ").strip().upper()
                 
                 if confirmation == 'YES':
                     del expenses[list_index]
                     save_expenses()
-                    print(f"\n[SUCCESS] Expense #{index_to_delete} deleted.")
+                    print(f"\nExpense #{index_to_delete} deleted.")
                 else:
-                    print("Deletion cancelled.")
+                    print("Cancelled.")
                 break
             else:
-                print(f"Invalid number. Please enter a number between 1 and {len(expenses)}, or 0 to cancel.")
+                print(f"Invalid number. Enter 1 to {len(expenses)}, or 0.")
                 
         except ValueError:
-            print("Invalid input. Please enter a number.")
+            print("Invalid input. Enter a number.")
             
 
 def get_total_expenses():
-    """Calculates and displays the total amount spent."""
     if not expenses:
         print("\nNo expenses to total.")
         return
 
     total = sum(item['amount'] for item in expenses)
     print(f"\n--- Total Expenses ---")
-    print(f"Total spent across {len(expenses)} transactions: ${total:.2f}")
+    print(f"Total spent: ${total:.2f}")
 
-    # Bonus: Breakdown by Category
     category_totals = {}
     for expense in expenses:
         category = expense['category']
         amount = expense['amount']
         category_totals[category] = category_totals.get(category, 0) + amount
 
-    print("\n--- Breakdown by Category ---")
+    print("\n--- By Category ---")
     for category, total in sorted(category_totals.items(), key=lambda item: item[1], reverse=True):
         print(f"  {category:<10}: ${total:>.2f}")
 
-
-# --- Main Program Flow ---
-
 def main():
-    """Main function to run the application menu."""
-    load_expenses() # Load data when the application starts
+    load_expenses()
     
     while True:
-        print("\n\n===== Expense Manager Menu =====")
-        print("1. Add New Expense")
-        print("2. View All Expenses")
-        print("3. Calculate Total Expenses & Breakdown")
-        print("4. Delete an Expense")
+        print("\n\n===== Expense Menu =====")
+        print("1. Add Expense")
+        print("2. View Expenses")
+        print("3. View Totals")
+        print("4. Delete Expense")
         print("5. Exit and Save")
         
-        choice = input("Enter your choice (1-5): ").strip()
+        choice = input("Enter choice (1-5): ").strip()
         
         if choice == '1':
             add_expense()
@@ -220,11 +172,11 @@ def main():
         elif choice == '4':
             delete_expense()
         elif choice == '5':
-            save_expenses() # Final save before exiting
-            print("\nThank you for using the Expense Manager. Goodbye!")
+            save_expenses()
+            print("\nGoodbye!")
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 5.")
+            print("Invalid choice.")
 
 if __name__ == "__main__":
     main()
