@@ -1,4 +1,4 @@
-# project - Financial Expense Management Application
+# project - Financial Expense Manager
 * An object-oriented desktop application built with Python to help users track, organize, and gain insights into their personal spending for effective financial planning.
 
 # The Problem & Our Solution:-
