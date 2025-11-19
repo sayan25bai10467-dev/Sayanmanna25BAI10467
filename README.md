@@ -53,5 +53,5 @@
   * Sayan Manna (Reg. No. 25BAI10467)
   * Ganesh S (Reg. No. 25MEI10020)
   * Vidit Agarwal (Reg. No. 25BCY10049)
-  * Rochan R K (Reg. No. 25BCE11177)
+  * Rochan R K (Reg. No. 25BCE11177
     
