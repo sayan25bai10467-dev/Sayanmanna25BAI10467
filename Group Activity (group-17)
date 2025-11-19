@@ -195,3 +195,33 @@ class DatabaseManager:
 STANDARD_CATEGORIES = [
     "Food & Groceries", "Transport", "Entertainment", "Utilities", "Custom"
 ]
+
+
+# expense_model.py
+
+class Expense:
+    """
+    Represents a single financial expense transaction.
+    """
+    def __init__(self, amount, category, description="", date=None):
+        # The amount of money spent
+        self.amount = amount
+        # The category of the expense (e.g., 'Food & Groceries', 'Entertainment')
+        self.category = category
+        # Optional brief description of the expense
+        self.description = description
+        # Date of the expense (defaults to today if None)
+        self.date = date if date is not None else self._get_current_date()
+
+    def __repr__(self):
+        """Returns a string representation of the Expense object."""
+        return f"Expense(amount={self.amount}, category='{self.category}', date='{self.date}')"
+
+    def to_tuple(self):
+        """Returns a tuple for easy insertion into the SQLite database."""
+        return (self.amount, self.category, self.description, self.date)
+
+    def _get_current_date(self):
+        """Helper method to get the current date in YYYY-MM-DD format."""
+        from datetime import datetime
+        return datetime.now().strftime("%Y-%m-%d")
