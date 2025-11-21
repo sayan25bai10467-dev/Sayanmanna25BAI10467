@@ -1,4 +1,4 @@
-# project - Financial Expense Manager
+# Project - Financial Expense Manager
 * An object-oriented desktop application built with Python to help users track, organize, and gain insights into their personal spending for effective financial planning.
 
 # The Problem & Our Solution:-
@@ -54,4 +54,4 @@
   * Ganesh S (Reg. No. 25MEI10020)
   * Vidit Agarwal (Reg. No. 25BCY10049)
   * Rochan R K (Reg. No. 25BCE11177
-    
+
