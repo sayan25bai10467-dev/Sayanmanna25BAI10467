@@ -55,3 +55,52 @@
   * Vidit Agarwal (Reg. No. 25BCY10049)
   * Rochan R K (Reg. No. 25BCE11177
 
+Age-Based Nutrition Suggestion Guide
+A simple Python script that provides basic food and nutrition recommendations based on the user's age group. This tool is designed to offer quick, general guidance and should not replace professional medical or nutritional advice.
+
+✨ Features
+Age-Group Classification: Categorizes users into Infants, Children, Teenagers, Adults, and Senior Citizens.
+
+Tailored Recommendations: Provides specific food and nutrition suggestions for each age group.
+
+Simple Command-Line Interface: Easy to run and get instant suggestions.
+
+🚀 Getting Started
+These instructions will get you a copy of the project up and running on your local machine.
+
+Prerequisites
+You only need Python 3 installed on your system.
+
+Installation
+Clone the repository (or download the script directly):
+
+Bash
+
+git clone [Your Repository URL Here]
+cd [Your Repository Name Here]
+Save the script: Ensure the code provided is saved in a file named nutrition_guide.py (or a similar name).
+
+💻 How to Run the Script
+Open your terminal or command prompt.
+
+Navigate to the directory where you saved the script.
+
+Execute the script using the Python interpreter:
+
+Bash
+
+python nutrition_guide.py
+The script will prompt you to enter your age.
+
+After entering a valid number, the corresponding nutrition suggestion will be displayed.
+
+Example Session:
+------ NUTRITION GUIDE ------
+Enter your age: 35
+
+Nutrition Suggestion:
+Age Group: Adults (20-60 years)
+- Balanced diet: rice/roti + dal + sabji
+- Lean proteins (dal, chicken, fish)
+- Seasonal fruits
+- Fiber-rich vegetables
